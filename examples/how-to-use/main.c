@@ -4,9 +4,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-/* * Manual declaration of library functions.
- * In a real scenario, you would include a header file (e.g., zctl.h).
+/* * Event Type Definitions (based on linux/input-event-codes.h)
+ * Defining them here makes this example self-contained.
  */
+const int ev_syn = 0x00;
+const int ev_key = 0x01;
+const int ev_rel = 0x02;
+const int ev_abs = 0x03;
+const int ev_msc = 0x04;
+const int ev_sw = 0x05;
+
+/* * Manual declaration of library functions. */
 int zctl_open(const char *path);
 int zctl_poll(uint16_t *type, uint16_t *code, int32_t *value);
 void zctl_close();
@@ -21,54 +29,59 @@ int main(int argc, char *argv[]) {
 
   const char *device_path = argv[1];
 
-  /* * Step 1: Initialize the library
-   * Open the target input device.
-   */
+  /* * Step 1: Initialize the library */
   printf("Opening device: %s\n", device_path);
   if (zctl_open(device_path) != 0) {
     fprintf(stderr, "Error: Failed to open device '%s'.\n", device_path);
-    fprintf(stderr,
-            "Hint: Check permissions (try sudo) or if the file exists.\n");
     return 1;
   }
 
-  printf("Successfully opened. Press Ctrl+C to exit.\n");
-  printf("Waiting for events...\n");
+  printf("Successfully opened. Listening for all events... (Ctrl+C to exit)\n");
 
   uint16_t type, code;
   int32_t value;
 
-  /* * Step 2: Event Loop
-   * Poll the device for new events continuously.
-   */
+  /* * Step 2: Event Loop */
   while (1) {
-    /* zctl_poll returns 0 if an event was successfully read */
     if (zctl_poll(&type, &code, &value) == 0) {
 
-      /* * Filter and process events.
-       * Type 1 corresponds to EV_KEY (Button presses) in Linux input subsystem.
-       */
-      if (type == 1) {
-        printf("[EVENT] Type: EV_KEY (%d) | Code: %d | Value: %d (%s)\n", type,
-               code, value, (value == 1) ? "Press" : "Release");
-      } else {
-        /* Optional: Print other event types (EV_ABS, EV_REL, etc.) */
-        /* printf("[EVENT] Type: %d | Code: %d | Value: %d\n", type, code,
-         * value); */
+      switch (type) {
+      case ev_syn:
+        /* Synchronization event - separates packets of data */
+        printf(" [SYN]  --------------------------------\n");
+        break;
+
+      case ev_key:
+        /* Keys and Buttons */
+        printf(" [KEY]  Code: %3d | Value: %d (%s)\n", code, value,
+               (value ? "Press" : "Release"));
+        break;
+
+      case ev_rel:
+        /* Relative Axis (e.g., Mouse, Scroll Wheel) */
+        printf(" [REL]  Code: %3d | Value: %d\n", code, value);
+        break;
+
+      case ev_abs:
+        /* Absolute Axis (e.g., Joysticks, Triggers, Touchpads) */
+        printf(" [ABS]  Code: %3d | Value: %d\n", code, value);
+        break;
+
+      case ev_msc:
+        /* Miscellaneous (e.g., Scan codes, timestamps) */
+        printf(" [MSC]  Code: %3d | Value: %d\n", code, value);
+        break;
+
+      default:
+        /* Other less common events (LED, Sound, Switch, etc.) */
+        printf(" [UNK]  Type: %3d | Code: %3d | Value: %d\n", type, code,
+               value);
+        break;
       }
     }
-
-    /* * Sleep for a short duration to prevent high CPU usage.
-     * 10ms is usually responsive enough for a sample.
-     */
-    usleep(10000);
+    usleep(10000); /* 10ms sleep */
   }
 
-  /* * Step 3: Cleanup
-   * Close the device when finished (though this loop is infinite,
-   * this shows the correct cleanup procedure).
-   */
   zctl_close();
-
   return 0;
 }
