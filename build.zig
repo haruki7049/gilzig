@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
 
     const lib = b.addLibrary(.{
         .linkage = .dynamic,
-        .name = "lightmix",
+        .name = "gilzig",
         .root_module = mod,
     });
     b.installArtifact(lib);
