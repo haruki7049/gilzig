@@ -37,6 +37,9 @@
             programs.zig.enable = true;
             settings.formatter.zig.command = lib.getExe zig-cc;
 
+            # C
+            programs.clang-format.enable = true;
+
             # GitHub Actions
             programs.actionlint.enable = true;
 
