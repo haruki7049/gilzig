@@ -1,0 +1,6 @@
+# nix-direnv
+.direnv/
+
+# Nix's result
+result
+result-*
