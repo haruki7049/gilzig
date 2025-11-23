@@ -1,6 +1,4 @@
 const std = @import("std");
-const fs = std.fs;
-const os = std.os;
 
 // Linux input_event structure (from linux/input.h)
 // Alignment matches C ABI on Linux (usually).
@@ -15,7 +13,7 @@ const InputEvent = extern struct {
 };
 
 // Global state to hold the file descriptor
-var device_file: ?fs.File = null;
+var device_file: ?std.fs.File = null;
 
 // Error codes exposed to C
 const ZCTL_OK: i32 = 0;
@@ -29,7 +27,7 @@ export fn zctl_open(path: [*:0]const u8) i32 {
     const slice = std.mem.span(path);
 
     // Open file in non-blocking mode
-    const file = fs.openFileAbsolute(slice, .{ .mode = .read_only }) catch {
+    const file = std.fs.openFileAbsolute(slice, .{ .mode = .read_only }) catch {
         return ZCTL_ERR_OPEN;
     };
 
@@ -45,10 +43,7 @@ export fn zctl_poll(ev_type: *u16, ev_code: *u16, ev_value: *i32) i32 {
         var event: InputEvent = undefined;
 
         // Read exactly one struct size
-        const bytes_read = file.read(std.mem.asBytes(&event)) catch |err| {
-            // Normally we would check for WouldBlock, assuming non-blocking I/O logic here
-            // For simplicity, treating generic errors as read error.
-            _ = err;
+        const bytes_read = file.read(std.mem.asBytes(&event)) catch {
             return ZCTL_ERR_READ;
         };
 
