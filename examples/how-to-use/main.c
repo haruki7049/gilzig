@@ -7,12 +7,12 @@
 /* * Event Type Definitions (based on linux/input-event-codes.h)
  * Defining them here makes this example self-contained.
  */
-const int ev_syn = 0x00;
-const int ev_key = 0x01;
-const int ev_rel = 0x02;
-const int ev_abs = 0x03;
-const int ev_msc = 0x04;
-const int ev_sw = 0x05;
+const uint16_t ev_syn = 0x00;
+const uint16_t ev_key = 0x01;
+const uint16_t ev_rel = 0x02;
+const uint16_t ev_abs = 0x03;
+const uint16_t ev_msc = 0x04;
+const uint16_t ev_sw = 0x05;
 
 /* * Manual declaration of library functions. */
 int zctl_open(const char *path);
